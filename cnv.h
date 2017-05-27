@@ -69,19 +69,19 @@ void cross2DConv()
 
 	kernLen = kernSize/2;
 
-	for(i = 0; i < imgWidth; i++){
-		for(j = 0; j <= i && j < imgHeight; j++){
+	for(l = 0; l < kernSize; l++){
+		for(k = 0; k < kernSize; k++){
 			for(inIdx = 0; inIdx < numInput; inIdx++){
 				for(filIdx = 0; filIdx < numFilter; filIdx++){
-					rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
-					weight = weights[filIdx];
-					for(k = 0; k < kernSize; k++){
-						for(l = 0; l < kernSize; l++){
+					for(i = 0; i < imgWidth; i++){
+						for(j = 0; j <= i && j < imgHeight; j++){
+							rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
+							weight = weights[filIdx];
 							idx[0] = getIdx(j, i - j);
 							idx[1] = idx[0]%imgWidth - kernLen + l;
 							idx[2] = idx[0]/imgWidth - kernLen + k;
 							if((idx[1] >= 0) && (idx[2] >= 0) && 
-								(idx[1] < imgWidth) && (idx[2] < imgHeight)){
+									(idx[1] < imgWidth) && (idx[2] < imgHeight)){
 								pixelPtr = (Pixel *) &data[inIdx][getIdx(idx[2], idx[1])* sizeof(Pixel)];
 								rgb[0] += filters[filIdx][k][l] * (pixelPtr->R - 0);
 								rgb[1] += filters[filIdx][k][l] * (pixelPtr->G - 0);
@@ -97,19 +97,19 @@ void cross2DConv()
 			}
 		}
 	}
-	for(i = 0; i < imgHeight+1; i++){
-		for(j = 0; j <= i; j++){
+	for(l = 0; l < kernSize; l++){
+		for(k = 0; k < kernSize; k++){
 			for(inIdx = 0; inIdx < numInput; inIdx++){
 				for(filIdx = 0; filIdx < numFilter; filIdx++){
-					rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
-					weight = weights[filIdx];
-					for(k = 0; k < kernSize; k++){
-						for(l = 0; l < kernSize; l++){
+					for(i = 0; i < imgHeight+1; i++){
+						for(j = 0; j <= i; j++){
+							rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
+							weight = weights[filIdx];
 							idx[0] = getIdx(imgHeight - j, imgWidth - i + j);
 							idx[1] = idx[0]%imgWidth - kernLen + l;
 							idx[2] = idx[0]/imgWidth - kernLen + k;
 							if((idx[1] >= 0) && (idx[2] >=0) && 
-							    (idx[1] < imgWidth) && (idx[2] < imgHeight)){
+									(idx[1] < imgWidth) && (idx[2] < imgHeight)){
 								pixelPtr = (Pixel *) &data[inIdx][getIdx(idx[2], idx[1])* sizeof(Pixel)];
 								rgb[0] += filters[filIdx][l][k] * (pixelPtr->R - 0);
 								rgb[1] += filters[filIdx][l][k] * (pixelPtr->G - 0);
