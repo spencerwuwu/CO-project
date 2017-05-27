@@ -1,10 +1,10 @@
-CC	= ../I-love-CO/bin/riscv64-unknown-elf-gcc
+CC	= ../riscv-tools/bin/riscv64-unknown-elf-gcc
 CC-HOST	= gcc
 TARGET	= dip-riscv
 TARGET-HOST	= dip
-SPIKE	= ../I-love-CO/bin/spike
+SPIKE	= ../riscv-tools/bin/spike
 SPIKE-OPTION	= pk
-#SPIKE-OPTION	=--ic=64:1:64 --dc=64:1:64 pk   (for part I example)   
+SPIKE-OPTION	=--ic=64:1:64 --dc=64:1:64 pk
 
 CHECKER	= inspector
 
