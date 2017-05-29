@@ -63,18 +63,21 @@ void cross2DConv()
 {
 	int i, j, k, l;
 	int filIdx, inIdx;
-	int weight, kernLen;
+	int weight, weight1, kernLen;
 	int rgb[3], idx[3];
+	int rgb1[3], idx1[3];
 	Pixel *pixelPtr;
 
 	kernLen = kernSize/2;
 
-	for(inIdx = 0; inIdx < numInput; inIdx++){
-		for(filIdx = 0; filIdx < numFilter; filIdx++){
-			for(i = 0; i < imgWidth; i++){
-				for(j = 0; j <= i && j < imgHeight; j++){
+	for(i = 0; i < imgWidth; i++){
+		for(j = 0; j <= i && j < imgHeight; j++){
+			for(inIdx = 0; inIdx < numInput; inIdx++){
+				for(filIdx = 0; filIdx < numFilter; filIdx++){
 					rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
+					rgb1[0] = 0; rgb1[1] = 0; rgb1[2] = 0;
 					weight = weights[filIdx];
+					weight1 = weights[filIdx];
 					for(l = 0; l < kernSize; l++){
 						for(k = 0; k < kernSize; k++){
 							idx[0] = getIdx(j, i - j);
@@ -89,18 +92,34 @@ void cross2DConv()
 							}                               
 							else                            
 								weight -= filters[filIdx][k][l];
+
+							idx1[0] = getIdx(imgHeight - j, imgWidth - i + j);
+							idx1[1] = idx[0]%imgWidth - kernLen + l;
+							idx1[2] = idx[0]/imgWidth - kernLen + k;
+							if((idx1[1] >= 0) && (idx1[2] >=0) && 
+									(idx1[1] < imgWidth) && (idx1[2] < imgHeight)){
+								pixelPtr = (Pixel *) &data[inIdx][getIdx(idx1[2], idx1[1])* sizeof(Pixel)];
+								rgb1[0] += filters[filIdx][l][k] * (pixelPtr->R - 0);
+								rgb1[1] += filters[filIdx][l][k] * (pixelPtr->G - 0);
+								rgb1[2] += filters[filIdx][l][k] * (pixelPtr->B - 0);
+							}                               
+							else                            
+								weight1 -= filters[filIdx][l][k];
 						}
 					}		
 					checkPixelValue(rgb, weight);
 					setPixel(results[filIdx][inIdx], idx[0], rgb);
+					checkPixelValue(rgb1, weight1);
+					setPixel(results[filIdx][inIdx], idx1[0], rgb1);
 				}
 			}
 		}
 	}
-	for(inIdx = 0; inIdx < numInput; inIdx++){
-		for(filIdx = 0; filIdx < numFilter; filIdx++){
-			for(i = 0; i < imgHeight+1; i++){
-				for(j = 0; j <= i; j++){
+	/*
+	for(i = 0; i < imgHeight+1; i++){
+		for(j = 0; j <= i; j++){
+			for(inIdx = 0; inIdx < numInput; inIdx++){
+				for(filIdx = 0; filIdx < numFilter; filIdx++){
 					rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
 					weight = weights[filIdx];
 					for(l = 0; l < kernSize; l++){
@@ -125,6 +144,7 @@ void cross2DConv()
 			}
 		}
 	}
+	*/
 }
 
 
