@@ -62,7 +62,7 @@ void setPixel(BYTE *data, int idx, int *rgb)
 
 void cross2DConv()
 {
-	int i, j, k, l;
+	int i, j, si, sj, k, l;
 	int filIdx, inIdx;
 	int weight, kernLen;
 	int rgb[3], idx[3];
@@ -81,7 +81,6 @@ void cross2DConv()
 					for(inIdx = 0; inIdx < numInput; inIdx++){
 						for(filIdx = 0; filIdx < numFilter; filIdx++){
 							rgb[0] = 0; rgb[1] = 0; rgb[2] = 0;
-							rgb1[0] = 0; rgb1[1] = 0; rgb1[2] = 0;
 							weight = weights[filIdx];
 							for(l = 0; l < kernSize; l++){
 								for(k = 0; k < kernSize; k++){
