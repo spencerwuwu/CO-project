@@ -89,7 +89,7 @@ void cross2DConv()
 					weight = weights[filIdx];
 					for(k = 0; k < kernSize; k++){
 						for(l = 0; l < kernSize; l++){
-							idx[0] = getIx_result;
+							idx[0] = getIdx_result;
                             idx[1] = idx[0]%imgWidth - kernLen + l;
                             idx[2] = idx[0]/imgWidth - kernLen + k;
                             if((idx[1] >= 0) && (idx[2] >= 0) && 
@@ -137,7 +137,7 @@ void cross2DConv()
 							if((idx[1] >= 0) && (idx[2] >=0) && 
 									(idx[1] < imgWidth) && (idx[2] < imgHeight)){
 								pixelPtr = (Pixel *) &data[inIdx][getIdx(idx[2], idx[1])* sizeof(Pixel)];
-								if ( fileIdx == 0 )
+								if ( filIdx == 0 )
 								{
 									if ( l == k ) 
 									{
