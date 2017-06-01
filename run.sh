@@ -18,6 +18,10 @@ else
 	I_Access2="$(cat result.tmp | sed -n '13p' | sed -e "s/\s\{3,\}/ /g" | awk -F ":" '{ print $2 }')"
 	I_amat="$(cat result.tmp | sed -n '17p' | sed -e "s/\s\{3,\}/ /g" | awk -F ":" '{ print ($2*2+1) }')" 
 
+	cat result.tmp
+	echo ""
+	echo "*************************************************************"
+	echo ""
 	echo "D1 AMAT = $D_amat"
 	echo -n "D1 total cache access time = "
 	echo $(python -c "print($D_amat * ($D_Access1+$D_Access2))")
