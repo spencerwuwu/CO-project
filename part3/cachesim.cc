@@ -56,7 +56,9 @@ void cache_sim_t::init()
   write_misses = 0;
   bytes_written = 0;
   writebacks = 0;
-
+	//New Structure
+	head = tail;
+	//
   miss_handler = NULL;
 }
 
@@ -66,6 +68,38 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
 {
   tags = new uint64_t[sets*ways];
   memcpy(tags, rhs.tags, sets*ways*sizeof(uint64_t));
+  //create MRU list
+  MRU_block* tmp;
+  MRU_block* now = new MRU_block;
+  // the first block
+  now -> tag_modify(-1);
+  now -> tag_index_modify(-1);
+  now -> less_use_modify(tail);
+  tail -> often_use_modify(now);
+  tail = now;
+  // list like below
+  // __     __     __     __     __     __
+  //|__|<=>|__|<=>|__|<=>|__|<=>|__|<=>|__|
+  //        ^                           ^  
+  //        |                           | 
+  //        tail                        head
+  //        ______________________             ______________________
+  //       | tag_pos  |    tag    |           | tag_pos  |    tag    |
+  //       |__________|___________|           |__________|___________|
+  //       | less_use | often_use |---------->| less_use | often_use |
+  //       |__________| __________|<----+     |__________| __________|
+  //                                    +----------------------+
+  //
+  for(size_t i = 1; i < sets*ways; i++){
+	tmp = new MRU_block;
+	now -> often_use_modify(tmp);
+	tmp -> less_use_modify(now);
+	tmp -> tag_modify(-1);
+	tmp -> tag_index_modify(-1);
+	now = tmp;
+  }
+
+  head = end;
 }
 
 cache_sim_t::~cache_sim_t()
@@ -106,18 +140,48 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
   size_t tag = (addr >> idx_shift) | VALID;
 
   for (size_t i = 0; i < ways; i++)
-    if (tag == (tags[idx*ways + i] & ~DIRTY))
-      return &tags[idx*ways + i];
+    if (tag == (tags[idx*ways + i] & ~DIRTY)){
+		for(MRU_block* ptr = head; ptr->block_less_use() != NULL; ptr = ptr->block_less_use()){
+
+			if(tag == ptr->tag_contain_show()){
+				if(ptr != head){
+					//ptr == head needn't to change anything
+					MRU_block* tmp = ptr->block_less_use();
+					tmp->often_use_modify(ptr->block_often_use());
+					(ptr->block_often_use())->less_use_modify(tmp);
+					head->often_use_modify(ptr);
+					ptr->often_use_modify(NULL);
+					ptr->less_use_modify(head);
+					head = ptr;
+				}
+				break;// finish refresh
+			}
+		}
+		return &tags[idx*ways + i];
+	}
 
   return NULL;
 }
 
 uint64_t cache_sim_t::victimize(uint64_t addr)
 {
-  size_t idx = (addr >> idx_shift) & (sets-1);
-  size_t way = lfsr.next() % ways;
-  uint64_t victim = tags[idx*ways + way];
-  tags[idx*ways + way] = (addr >> idx_shift) | VALID;
+  uint64_t victim;
+  //tags[idx*ways + way] = (addr >> idx_shift) | VALID;
+  if(head->block_often_use()!= NULL){
+  	//exists free block
+  	size_t idx = (addr >> idx_shift) & (sets-1);
+  	size_t way = lfsr.next() % ways;
+	victim = tags[idx*ways + way];
+	head->tag_modify(addr >> idx_shift);
+	head->tag_index_modify((idx*ways + way));
+	head = head->block_often_use();
+	tags[idx * ways + way] = (addr >> idx_shift) | VALID;
+  }
+  else{
+	victim = head->tag_contain_show();
+	head->tag_modify(addr >> idx_shift);
+	tags[head->tag_index()] = (addr >> idx_shift) | VALID;
+  }
   return victim;
 }
 

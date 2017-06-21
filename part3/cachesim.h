@@ -19,16 +19,27 @@ class lfsr_t
   uint32_t reg;
 };
 
-class mru_t
-{
- public:
-  mru_t() : reg(1) {}
-  lfsr_t(const lfsr_t& lfsr) : reg(lfsr.reg) {}
-  uint32_t next() { return reg = (reg>>1)^(-(reg&1) & 0xd0000001); }
- private:
-  uint32_t reg;
-};
+class MRU_block{
+	public:
+		MRU_block() : often_use(NULL), less_use(NULL), tag(0){};
+		
+		MRU_block* block_often_use(){ return often_use; }
+		MRU_block* block_less_use(){ return less_use; }
 
+		void often_use_modify(MRU_block* often){ often_use = often; }
+		void less_use_modify(MRU_block* less){ less_use = less; }
+
+		uint64_t tag_contain_show(){ return tag; }
+		int tag_index(){ return tag_pos; }
+
+		void tag_modify(uint64_t new_contain){ tag = contain; }
+		void tag_index_modify(int new_tag_index){ tag_pos = new_tag_index; } 
+	private:
+		MRU_block* often_use;	//the pointer to the block often than this block 
+		MRU_block* less_use;	//the pointer to the block less than this block
+		uint64_t tag;			//tags[i] contain
+		int tag_pos;			//tags index i
+};
 class cache_sim_t
 {
  public:
@@ -41,6 +52,12 @@ class cache_sim_t
   void set_miss_handler(cache_sim_t* mh) { miss_handler = mh; }
 
   static cache_sim_t* construct(const char* config, const char* name);
+
+  //New MRU pointer
+  MRU_block *head;
+  MRU_block *tail;
+  size_t num;
+
 
  protected:
   static const uint64_t VALID = 1ULL << 63;
@@ -58,7 +75,6 @@ class cache_sim_t
   size_t idx_shift;
 
   uint64_t* tags;
-  int32_t* tags_history;
   
   uint64_t read_accesses;
   uint64_t read_misses;
