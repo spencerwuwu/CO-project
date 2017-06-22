@@ -32,7 +32,7 @@ class MRU_block{
 		uint64_t tag_contain_show(){ return tag; }
 		int tag_index(){ return tag_pos; }
 
-		void tag_modify(uint64_t new_contain){ tag = contain; }
+		void tag_modify(uint64_t new_contain){ tag = new_contain; }
 		void tag_index_modify(int new_tag_index){ tag_pos = new_tag_index; } 
 	private:
 		MRU_block* often_use;	//the pointer to the block often than this block 

@@ -56,10 +56,13 @@ void cache_sim_t::init()
   write_misses = 0;
   bytes_written = 0;
   writebacks = 0;
-	//New Structure
-	head = tail;
-	//
   miss_handler = NULL;
+	
+  // Link list init
+  head = new MRU_block;
+  tail = head;
+  num = 0;
+
 }
 
 cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
@@ -68,18 +71,10 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
 {
   tags = new uint64_t[sets*ways];
   memcpy(tags, rhs.tags, sets*ways*sizeof(uint64_t));
-  //create MRU list
-  MRU_block* tmp;
-  MRU_block* now = new MRU_block;
-  // the first block
-  now -> tag_modify(-1);
-  now -> tag_index_modify(-1);
-  now -> less_use_modify(tail);
-  tail -> often_use_modify(now);
-  tail = now;
-  // list like below
-  // __     __     __     __     __     __
-  //|__|<=>|__|<=>|__|<=>|__|<=>|__|<=>|__|
+  
+  // Structure of the link list
+  //  __     __     __     __     __     __
+  // |__|<=>|__|<=>|__|<=>|__|<=>|__|<=>|__|
   //        ^                           ^  
   //        |                           | 
   //        tail                        head
@@ -90,16 +85,29 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
   //       |__________| __________|<----+     |__________| __________|
   //                                    +----------------------+
   //
+
+  // Init MRU list
+  MRU_block* tmp;
+  MRU_block* now = new MRU_block;
+
+  // Create first list's object
+  now->tag_modify(tag[0]);
+  now->tag_index_modify(0);
+  now->less_use_modify(tail);
+  tail->often_use_modify(now);
+  tail = now;
+
+  // Finish rest of the list
   for(size_t i = 1; i < sets*ways; i++){
 	tmp = new MRU_block;
-	now -> often_use_modify(tmp);
-	tmp -> less_use_modify(now);
-	tmp -> tag_modify(-1);
-	tmp -> tag_index_modify(-1);
+	now->often_use_modify(tmp);
+	tmp->less_use_modify(now);
+	tmp->tag_modify(tags[i]);
+	tmp->tag_index_modify(i);
 	now = tmp;
   }
 
-  head = end;
+  head = now;
 }
 
 cache_sim_t::~cache_sim_t()
@@ -141,11 +149,12 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 
   for (size_t i = 0; i < ways; i++)
     if (tag == (tags[idx*ways + i] & ~DIRTY)){
-		for(MRU_block* ptr = head; ptr->block_less_use() != NULL; ptr = ptr->block_less_use()){
 
+		// Re-order link list
+		for(MRU_block* ptr = head; ptr->block_less_use() != NULL; ptr = ptr->block_less_use()){
 			if(tag == ptr->tag_contain_show()){
 				if(ptr != head){
-					//ptr == head needn't to change anything
+					// If is head, doesn't need to  change anything
 					MRU_block* tmp = ptr->block_less_use();
 					tmp->often_use_modify(ptr->block_often_use());
 					(ptr->block_often_use())->less_use_modify(tmp);
@@ -156,6 +165,7 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 				}
 				break;// finish refresh
 			}
+
 		}
 		return &tags[idx*ways + i];
 	}
@@ -181,6 +191,45 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 	victim = head->tag_contain_show();
 	head->tag_modify(addr >> idx_shift);
 	tags[head->tag_index()] = (addr >> idx_shift) | VALID;
+  }
+
+  if (num > (sets*ways+1)) {
+	victim = head->tag_contain_show();
+	MRU_block * new_head;
+	new_head = new MRU_block;
+	new_head->less_use_modify(head);
+	new_head->tag_modify(addr >> idx_shift);
+	new_head->tag_index_modify(head->tag_index());
+	head = new_head;
+
+	tags[head->tag_pos_contain()] = (addr >> idx_shift) | VALID;
+
+	MRU_block* tmp;
+	(head->block_often_use())->less_use_modify(NULL);
+	tmp = head;
+	head = head->block_often_use();
+	delete tmp;
+  }
+  else {
+	size_t idx = (addr >> idx_shift) & (sets-1);
+ 	size_t way = lfsr.next() % ways;
+  	victim = tags[idx*ways + way];
+	if(num == 0){
+		head->tag_mod((addr >> idx_shift));
+		head->tag_pos_mod((idx*ways + way));
+		head->less_use_mod(end);
+	}
+	else{
+		MRU_block* tmp;
+		tmp = new MRU_block;
+		head->often_use_modify(tmp);
+		tmp->less_use_modify(head);
+		tmp->tag_modify((addr >> idx_shift));
+		tmp->tag_index_mod((idx*ways + way));
+		head = tmp;
+	} 
+  	tags[idx*ways + way] = (addr >> idx_shift) | VALID;
+  	num++;
   }
   return victim;
 }
