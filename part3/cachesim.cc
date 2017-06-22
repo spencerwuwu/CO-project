@@ -217,7 +217,7 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 	if(num == 0){
 		head->tag_modify((addr >> idx_shift));
 		head->tag_index_modify((idx*ways + way));
-		head->less_use_mod(tail);
+		head->less_use_modify(tail);
 	}
 	else{
 		MRU_block* tmp;
