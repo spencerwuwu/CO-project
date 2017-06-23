@@ -148,7 +148,7 @@ void cache_sim_t::print_stats()
 
 uint64_t* cache_sim_t::check_tag(uint64_t addr)
 {
-  cout << "Check tag" << endl;
+  std::cout << "Check tag" << std::endl;
   size_t idx = (addr >> idx_shift) & (sets-1);
   size_t tag = (addr >> idx_shift) | VALID;
 
@@ -183,7 +183,7 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 uint64_t cache_sim_t::victimize(uint64_t addr)
 {
   uint64_t victim;
-  cout << "Victimize\n";
+  std::cout << "Victimize\n";
   //tags[idx*ways + way] = (addr >> idx_shift) | VALID;
   /*
   if(head->block_often_use()!= NULL){
@@ -215,9 +215,9 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 
 	MRU_block* tmp;
 	tmp = head;
-	cout << "tmp" << tmp << endl;
+	std::cout << "tmp" << tmp << std::endl;
 	head = new_head;
-	cout << "head" << head << endl;
+	std::cout << "head" << head << std::endl;
 	delete tmp;
 
 	tags[head->tag_index()] = (addr >> idx_shift) | VALID;
