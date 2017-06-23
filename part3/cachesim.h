@@ -54,9 +54,9 @@ class cache_sim_t
   static cache_sim_t* construct(const char* config, const char* name);
 
   //New MRU pointer
-  MRU_block *head;
-  MRU_block *tail;
-  size_t num;
+  MRU_block * head;
+  MRU_block * tail;
+  size_t * num;
 
 
  protected:
