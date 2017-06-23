@@ -58,6 +58,7 @@ void cache_sim_t::init()
   writebacks = 0;
   miss_handler = NULL;
 
+  std::cout<<"ini tags\n";
   for (size_t i = 0; i < sets*ways; i++) {
 	  tags[i] = 0;
   }
@@ -73,6 +74,7 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
  : sets(rhs.sets), ways(rhs.ways), linesz(rhs.linesz),
    idx_shift(rhs.idx_shift), name(rhs.name)
 {
+  std::cout<<"Constructor\n";
   tags = new uint64_t[sets*ways];
   memcpy(tags, rhs.tags, sets*ways*sizeof(uint64_t));
   
@@ -204,6 +206,7 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
   */
 
   if (num > (sets*ways+1)) {
+  	std::cout << "OUt of num process\n";
 	victim = head->tag_contain_show();
 	MRU_block * new_head;
 	new_head = new MRU_block;
@@ -224,19 +227,24 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 
   }
   else {
+  	std::cout << "In num process\n";
 	size_t idx = (addr >> idx_shift) & (sets-1);
  	size_t way = lfsr.next() % ways;
   	victim = tags[idx*ways + way];
+	std::cout << "modify list\n";
 	if(num == 0){
+	std::cout << "For empty\n";
 		head->tag_modify(((addr >> idx_shift) | VALID));
 		head->tag_index_modify((idx*ways + way));
 		head->less_use_modify(NULL);
 	}
-	else{
+	else {
+	std::cout << "For more\n";
 		MRU_block* tmp;
 		tmp = new MRU_block;
-		(head->block_less_use())->often_use_modify(tmp);
-		tmp->less_use_modify(head->block_less_use());
+		head->often_use_modify(tmp);
+		tmp->less_use_modify(head);
+		tmp->often_use_modify(NULL);
 		tmp->tag_modify(((addr >> idx_shift) | VALID));
 		tmp->tag_index_modify((idx*ways + way));
 		head = tmp;
