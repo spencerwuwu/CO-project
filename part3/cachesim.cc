@@ -57,6 +57,10 @@ void cache_sim_t::init()
   bytes_written = 0;
   writebacks = 0;
   miss_handler = NULL;
+
+  for (size_t i = 0; i < sets*ways; i++) {
+	  tags[i] = 0;
+  }
 	
   // Link list init
   head = new MRU_block;
@@ -144,6 +148,7 @@ void cache_sim_t::print_stats()
 
 uint64_t* cache_sim_t::check_tag(uint64_t addr)
 {
+  cout << "Check tag" << endl;
   size_t idx = (addr >> idx_shift) & (sets-1);
   size_t tag = (addr >> idx_shift) | VALID;
 
@@ -151,7 +156,8 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
     if (tag == (tags[idx*ways + i] & ~DIRTY)){
 
 		// Re-order link list
-		for(MRU_block* ptr = head; ptr->block_less_use() != NULL; ptr = ptr->block_less_use()){
+		size_t j = 0;
+		for(MRU_block* ptr = head; j < num; ptr = ptr->block_less_use()){
 			if(tag == ptr->tag_contain_show()){
 				if(ptr != head){
 					// If is head, doesn't need to  change anything
@@ -165,6 +171,7 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 				}
 				break;// finish refresh
 			}
+			j++;
 
 		}
 		return &tags[idx*ways + i];
@@ -176,7 +183,9 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 uint64_t cache_sim_t::victimize(uint64_t addr)
 {
   uint64_t victim;
+  cout << "Victimize\n";
   //tags[idx*ways + way] = (addr >> idx_shift) | VALID;
+  /*
   if(head->block_often_use()!= NULL){
   	//exists free block
   	size_t idx = (addr >> idx_shift) & (sets-1);
@@ -192,39 +201,43 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 	head->tag_modify(addr >> idx_shift);
 	tags[head->tag_index()] = (addr >> idx_shift) | VALID;
   }
+  */
 
   if (num > (sets*ways+1)) {
 	victim = head->tag_contain_show();
 	MRU_block * new_head;
 	new_head = new MRU_block;
-	new_head->less_use_modify(head);
-	new_head->tag_modify(addr >> idx_shift);
+	new_head->less_use_modify(head->block_less_use());
+	new_head->often_use_modify(NULL);
+	new_head->tag_modify(((addr >> idx_shift) | VALID));
 	new_head->tag_index_modify(head->tag_index());
+	(head->block_less_use())->often_use_modify(new_head);
+
+	MRU_block* tmp;
+	tmp = head;
+	cout << "tmp" << tmp << endl;
 	head = new_head;
+	cout << "head" << head << endl;
+	delete tmp;
 
 	tags[head->tag_index()] = (addr >> idx_shift) | VALID;
 
-	MRU_block* tmp;
-	(head->block_often_use())->less_use_modify(NULL);
-	tmp = head;
-	head = head->block_often_use();
-	delete tmp;
   }
   else {
 	size_t idx = (addr >> idx_shift) & (sets-1);
  	size_t way = lfsr.next() % ways;
   	victim = tags[idx*ways + way];
 	if(num == 0){
-		head->tag_modify((addr >> idx_shift));
+		head->tag_modify(((addr >> idx_shift) | VALID));
 		head->tag_index_modify((idx*ways + way));
-		head->less_use_modify(tail);
+		head->less_use_modify(NULL);
 	}
 	else{
 		MRU_block* tmp;
 		tmp = new MRU_block;
-		head->often_use_modify(tmp);
-		tmp->less_use_modify(head);
-		tmp->tag_modify((addr >> idx_shift));
+		(head->block_less_use())->often_use_modify(tmp);
+		tmp->less_use_modify(head->block_less_use());
+		tmp->tag_modify(((addr >> idx_shift) | VALID));
 		tmp->tag_index_modify((idx*ways + way));
 		head = tmp;
 	} 
