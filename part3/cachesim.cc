@@ -59,7 +59,6 @@ void cache_sim_t::init()
   writebacks = 0;
   miss_handler = NULL;
 
-  std::cout<<"ini tags\n";
   for (size_t i = 0; i < sets*ways; i++) {
 	  tags[i] = 0;
   }
@@ -80,7 +79,6 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
  : sets(rhs.sets), ways(rhs.ways), linesz(rhs.linesz),
    idx_shift(rhs.idx_shift), name(rhs.name)
 {
-  std::cout<<"Constructor\n";
   tags = new uint64_t[sets*ways];
   memcpy(tags, rhs.tags, sets*ways*sizeof(uint64_t));
   
@@ -160,7 +158,6 @@ void cache_sim_t::print_stats()
 
 uint64_t* cache_sim_t::check_tag(uint64_t addr)
 {
-  std::cout << "Check tag" << std::endl;
   size_t idx = (addr >> idx_shift) & (sets-1);
   size_t tag = (addr >> idx_shift) | VALID;
 
@@ -171,7 +168,6 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 		size_t j = 0;
 		for(MRU_block* ptr = head[idx]; j < num[idx]; ptr = ptr->block_less_use()){
 			if(tag == ptr->tag_contain_show()){
-			std::cout << "GOGO\n";
 				if(ptr != head[idx]){
 					// If is head, doesn't need to  change anything
 					MRU_block* tmp = ptr->block_less_use();
@@ -196,11 +192,9 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 uint64_t cache_sim_t::victimize(uint64_t addr)
 {
   uint64_t victim;
-  std::cout << "Victimize\n";
   size_t idx = (addr >> idx_shift) & (sets-1);
 
   if (num[idx] > (ways+1)) {
-  	std::cout << "OUt of num process\n";
 	victim = head[idx]->tag_contain_show();
 	MRU_block * new_head;
 	new_head = new MRU_block;
@@ -212,9 +206,7 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 
 	MRU_block* tmp;
 	tmp = head[idx];
-	std::cout << "tmp" << tmp << std::endl;
 	head[idx] = new_head;
-	std::cout << "head" << head << std::endl;
 	delete tmp;
 
 	tags[head[idx]->tag_index()] = (addr >> idx_shift) | VALID;
