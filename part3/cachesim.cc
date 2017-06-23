@@ -161,11 +161,12 @@ uint64_t* cache_sim_t::check_tag(uint64_t addr)
 		size_t j = 0;
 		for(MRU_block* ptr = head; j < num; ptr = ptr->block_less_use()){
 			if(tag == ptr->tag_contain_show()){
+			std::cout << "GOGO\n";
 				if(ptr != head){
 					// If is head, doesn't need to  change anything
 					MRU_block* tmp = ptr->block_less_use();
 					tmp->often_use_modify(ptr->block_often_use());
-					(ptr->block_often_use())->less_use_modify(tmp);
+					(ptr->block_often_use())->less_use_modify(tmp->block_less_use());
 					head->often_use_modify(ptr);
 					ptr->often_use_modify(NULL);
 					ptr->less_use_modify(head);
@@ -227,19 +228,15 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 
   }
   else {
-  	std::cout << "In num process\n";
 	size_t idx = (addr >> idx_shift) & (sets-1);
  	size_t way = lfsr.next() % ways;
   	victim = tags[idx*ways + way];
-	std::cout << "modify list\n";
 	if(num == 0){
-	std::cout << "For empty\n";
 		head->tag_modify(((addr >> idx_shift) | VALID));
 		head->tag_index_modify((idx*ways + way));
 		head->less_use_modify(NULL);
 	}
 	else {
-	std::cout << "For more\n";
 		MRU_block* tmp;
 		tmp = new MRU_block;
 		head->often_use_modify(tmp);
@@ -250,7 +247,6 @@ uint64_t cache_sim_t::victimize(uint64_t addr)
 		head = tmp;
 	} 
   	tags[idx*ways + way] = (addr >> idx_shift) | VALID;
-  	num++;
   }
   return victim;
 }
