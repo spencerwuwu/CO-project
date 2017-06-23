@@ -21,7 +21,7 @@ class lfsr_t
 
 class MRU_block{
 	public:
-		MRU_block() : often_use(NULL), less_use(NULL), tag(0){};
+		MRU_block() : often_use(NULL), less_use(NULL), tag(0), tag_pos(0){};
 		
 		MRU_block* block_often_use(){ return often_use; }
 		MRU_block* block_less_use(){ return less_use; }

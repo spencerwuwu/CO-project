@@ -93,14 +93,14 @@ cache_sim_t::cache_sim_t(const cache_sim_t& rhs)
   // Create first list's object
   now->tag_modify(tags[0]);
   now->tag_index_modify(0);
-  now->less_use_modify(tail);
-  tail->often_use_modify(now);
+  now->less_use_modify(NULL);
+  now->often_use_modify(NULL);
   tail = now;
 
   // Finish rest of the list
   for(size_t i = 1; i < sets*ways; i++){
 	tmp = new MRU_block;
-	now->often_use_modify(tmp);
+	tmp->often_use_modify(NULL);
 	tmp->less_use_modify(now);
 	tmp->tag_modify(tags[i]);
 	tmp->tag_index_modify(i);
