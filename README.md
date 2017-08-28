@@ -1,4 +1,7 @@
 # NCTU EE Computer Organization Final Project Spring 2017
+This is our repo for the solutions of this homework.
+
+---------------------------------------
     The project will take you to get started with RISCV and a basic concept about images processing. In this project, it’s divided into 3 parts, and each part is a bit related to the other two. The main tasks are using spike which is connected with the cache, modifying the program to get better performance, changing replacement policy in cache to implement another policy respectively.  
  
     Hope you will learn a lot and have fun!
